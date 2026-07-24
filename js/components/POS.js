@@ -12,6 +12,24 @@ const POSPage = ({ onSale }) => {
   const [orderType, setOrderType] = React.useState("Salón");
   const [selectedTable, setSelectedTable] = React.useState(null);
   const [showReceipt, setShowReceipt] = React.useState(null);
+  const [discount, setDiscount] = React.useState(null);
+  const [couponInput, setCouponInput] = React.useState("");
+  const [couponError, setCouponError] = React.useState("");
+  const [orderNotes, setOrderNotes] = React.useState("");
+  const [showNotes, setShowNotes] = React.useState(false);
+  const searchRef = React.useRef(null);
+
+  // Keyboard shortcuts
+  React.useEffect(() => {
+    const clearHandler = () => { clearOrder(); };
+    const searchHandler = () => { searchRef.current?.focus(); };
+    window.addEventListener("pos-clear-order", clearHandler);
+    window.addEventListener("pos-focus-search", searchHandler);
+    return () => {
+      window.removeEventListener("pos-clear-order", clearHandler);
+      window.removeEventListener("pos-focus-search", searchHandler);
+    };
+  }, []);
 
   const filtered = React.useMemo(() => {
     let result = MENU;
@@ -36,11 +54,41 @@ const POSPage = ({ onSale }) => {
   }, []);
 
   const removeItem = React.useCallback((id) => setOrder(prev => prev.filter(p => p.id !== id)), []);
-  const clearOrder = React.useCallback(() => { setOrder([]); setCashInput(""); setQrConfirmed(false); }, []);
+  const clearOrder = React.useCallback(() => {
+    setOrder([]); setCashInput(""); setQrConfirmed(false);
+    setDiscount(null); setCouponInput(""); setCouponError("");
+    setOrderNotes(""); setShowNotes(false);
+  }, []);
+
+  const applyCoupon = React.useCallback(() => {
+    const code = couponInput.trim().toUpperCase();
+    const coupon = COUPONS[code];
+    if (coupon) {
+      setDiscount({ code, ...coupon });
+      setCouponError("");
+    } else {
+      setCouponError("Cupón no válido");
+      setTimeout(() => setCouponError(""), 2000);
+    }
+  }, [couponInput]);
+
+  const removeDiscount = React.useCallback(() => {
+    setDiscount(null);
+    setCouponInput("");
+  }, []);
 
   const subtotal = React.useMemo(() => order.reduce((s, p) => s + p.price * p.qty, 0), [order]);
-  const igv = subtotal * 0.18;
-  const total = subtotal + igv;
+  const discountAmount = React.useMemo(() => {
+    if (!discount) return 0;
+    if (discount.type === "percent") return subtotal * (discount.value / 100);
+    return Math.min(discount.value, subtotal);
+  }, [subtotal, discount]);
+  const afterDiscount = subtotal - discountAmount;
+  const isDelivery = orderType === "Delivery";
+  const deliveryFee = isDelivery ? (afterDiscount >= DELIVERY_CONFIG.freeDeliveryThreshold ? 0 : DELIVERY_CONFIG.fee) : 0;
+  const surcharge = isDelivery && afterDiscount < DELIVERY_CONFIG.minimumOrder && afterDiscount > 0 ? DELIVERY_CONFIG.surcharge : 0;
+  const igv = afterDiscount * 0.18;
+  const total = afterDiscount + igv + deliveryFee + surcharge;
   const received = parseFloat(cashInput || "0");
   const vuelto = received - total;
   const readyToCharge = order.length > 0 && ((method === "Efectivo" && received >= total && total > 0) || (method !== "Efectivo" && qrConfirmed));
@@ -49,8 +97,10 @@ const POSPage = ({ onSale }) => {
   const cobrar = () => {
     if (!readyToCharge) return;
     const ticket = {
-      id: Date.now(), items: [...order], total, method, type: orderType, table: selectedTable,
+      id: Date.now(), items: [...order], subtotal, discountAmount, discount: discount ? discount.code : null,
+      deliveryFee, surcharge, igv, total, method, type: orderType, table: selectedTable,
       time: new Date().toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" }),
+      notes: orderNotes,
     };
     onSale(ticket);
     setShowReceipt(ticket);
@@ -86,8 +136,8 @@ const POSPage = ({ onSale }) => {
           )}
           <div style={{ flex: 1 }} />
           <div style={{ position: "relative", width: 288 }}>
-            <Icons.search size={18} className="" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
-            <input type="text" placeholder="Buscar plato..." value={search} onChange={e => setSearch(e.target.value)}
+            <Icons.search size={18} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+            <input ref={searchRef} type="text" placeholder="Buscar plato... (Ctrl+F)" value={search} onChange={e => setSearch(e.target.value)}
               className="form-input" style={{ paddingLeft: 42, paddingRight: 36, fontSize: 13 }} />
             {search && (
               <button onClick={() => setSearch("")} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: "var(--text-faint)", background: "none", border: "none", cursor: "pointer", padding: 4 }}>
@@ -114,17 +164,11 @@ const POSPage = ({ onSale }) => {
             <button key={item.id} onClick={() => addItem(item)}
               className="product-card animate-fade-up"
               style={{ animationDelay: `${index * 0.03}s`, opacity: 0 }}>
-
               {item.popular ? (
-                <div className="product-card-popular">
-                  <Icons.star size={10} /> Popular
-                </div>
+                <div className="product-card-popular"><Icons.star size={10} /> Popular</div>
               ) : (
-                <div className="product-card-add">
-                  <Icons.plus size={16} />
-                </div>
+                <div className="product-card-add"><Icons.plus size={16} /></div>
               )}
-
               <div className="product-card-emoji">{item.emoji}</div>
               <div className="product-card-name">{item.name}</div>
               <div className="product-card-desc">{item.desc}</div>
@@ -158,6 +202,7 @@ const POSPage = ({ onSale }) => {
               <h2 style={{ fontWeight: 700, fontSize: 18, color: "var(--text-primary)" }}>Orden</h2>
               <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2, fontWeight: 500 }}>
                 {orderType}{selectedTable ? ` · Mesa ${selectedTable}` : ""} · {totalItems} items
+                {isDelivery && <span style={{ marginLeft: 6, color: "var(--info)", fontWeight: 600 }}>+ Envío</span>}
               </p>
             </div>
             {order.length > 0 && (
@@ -174,9 +219,7 @@ const POSPage = ({ onSale }) => {
         <div className="ticket-items">
           {order.length === 0 ? (
             <div className="ticket-empty">
-              <div className="ticket-empty-icon">
-                <Icons.cart size={32} />
-              </div>
+              <div className="ticket-empty-icon"><Icons.cart size={32} /></div>
               <div style={{ textAlign: "center" }}>
                 <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text-muted)" }}>Sin productos</p>
                 <p style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 4 }}>Selecciona del menú</p>
@@ -197,18 +240,64 @@ const POSPage = ({ onSale }) => {
                     <button className="ticket-qty-btn" onClick={() => addItem(p)}><Icons.plus size={12} /></button>
                   </div>
                   <div className="ticket-item-total mono">{money(p.price * p.qty)}</div>
-                  <button className="ticket-item-remove" onClick={() => removeItem(p.id)}>
-                    <Icons.x size={14} />
-                  </button>
+                  <button className="ticket-item-remove" onClick={() => removeItem(p.id)}><Icons.x size={14} /></button>
                 </div>
               ))}
+
+              {/* Order Notes */}
+              <div className="order-notes-section">
+                <button className="order-notes-toggle" onClick={() => setShowNotes(!showNotes)}>
+                  <Icons.messageSquare size={14} />
+                  {showNotes ? "Ocultar notas" : "Agregar notas"}
+                  <Icons.chevronDown size={12} style={{ transform: showNotes ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+                </button>
+                {showNotes && (
+                  <textarea className="order-notes-input" placeholder="Ej: Sin cebolla, poco picante, extra salsa..." value={orderNotes} onChange={e => setOrderNotes(e.target.value)} />
+                )}
+              </div>
             </div>
           )}
         </div>
 
         {/* Checkout */}
         <div className="checkout">
+          {/* Discount */}
+          <div style={{ marginBottom: 12 }}>
+            {discount ? (
+              <div className="discount-badge">
+                <Icons.tag size={14} />
+                {discount.label}
+                <button className="discount-remove" onClick={removeDiscount}><Icons.x size={12} /></button>
+              </div>
+            ) : (
+              <div className="discount-row">
+                <input className="discount-input" placeholder="Cupón" value={couponInput} onChange={e => setCouponInput(e.target.value.toUpperCase())}
+                  onKeyDown={e => e.key === "Enter" && applyCoupon()} />
+                <button className="discount-apply-btn" onClick={applyCoupon}>Aplicar</button>
+              </div>
+            )}
+            {couponError && <p style={{ fontSize: 11, color: "var(--error)", marginTop: 4, fontWeight: 500 }}>{couponError}</p>}
+          </div>
+
           <div className="checkout-row"><span>Subtotal</span><span className="mono">{money(subtotal)}</span></div>
+          {discountAmount > 0 && (
+            <div className="checkout-row" style={{ color: "var(--success)" }}>
+              <span>Descuento ({discount.code})</span><span className="mono">-{money(discountAmount)}</span>
+            </div>
+          )}
+          {isDelivery && (
+            <>
+              <div className="checkout-row">
+                <span>Envío</span>
+                <span className={`mono ${deliveryFee === 0 ? "free" : ""}`}>{deliveryFee === 0 ? "Gratis" : money(deliveryFee)}</span>
+              </div>
+              {surcharge > 0 && (
+                <div className="checkout-row" style={{ color: "var(--warning)" }}>
+                  <span>Recargo (mínimo {money(DELIVERY_CONFIG.minimumOrder)})</span><span className="mono">+{money(surcharge)}</span>
+                </div>
+              )}
+            </>
+          )}
           <div className="checkout-row"><span>IGV (18%)</span><span className="mono">{money(igv)}</span></div>
           <div className="checkout-total">
             <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>Total</span>
@@ -244,13 +333,9 @@ const POSPage = ({ onSale }) => {
               <div className="animate-fade-up qr-panel" style={{ position: "relative" }}>
                 <QRPattern size={120} />
                 {!qrConfirmed ? (
-                  <button onClick={() => setQrConfirmed(true)} className="qr-simulate-btn">
-                    Simular pago ({method})
-                  </button>
+                  <button onClick={() => setQrConfirmed(true)} className="qr-simulate-btn">Simular pago ({method})</button>
                 ) : (
-                  <div className="qr-confirmed animate-bounce-in">
-                    <Icons.check size={16} /> Pago confirmado
-                  </div>
+                  <div className="qr-confirmed animate-bounce-in"><Icons.check size={16} /> Pago confirmado</div>
                 )}
               </div>
             )}

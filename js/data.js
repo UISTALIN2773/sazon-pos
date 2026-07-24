@@ -43,11 +43,27 @@ const TABLES = Array.from({ length: 12 }, (_, i) => ({
   order: i < 3 ? Math.floor(Math.random() * 3) + 1 : 0,
 }));
 
+const DELIVERY_CONFIG = {
+  fee: 5.00,
+  minimumOrder: 30,
+  surcharge: 3.00,
+  freeDeliveryThreshold: 80,
+  estimatedTime: "30-45 min",
+  riders: ["Juan P.", "Luis M.", "Carlos R.", "Miguel A."],
+};
+
+const COUPONS = {
+  "SAZON10": { type: "percent", value: 10, label: "10% de descuento" },
+  "HAPPY20": { type: "percent", value: 20, label: "20% de descuento" },
+  "FIESTA": { type: "fixed", value: 15, label: "S/ 15.00 de descuento" },
+  "NUEVO": { type: "percent", value: 25, label: "25% bienvenida" },
+};
+
 const DELIVERY_ORDERS = [
-  { id: 1, client: "María García", phone: "+51 999 123 456", address: "Av. Javier Prado 1234, Surco", items: "2x Lomo Saltado, 1x Chicha Morada", total: 72, status: "entregado", time: "12:30", rider: "Juan P." },
-  { id: 2, client: "Carlos Ruiz", phone: "+51 999 789 012", address: "Jr. de la Unión 456, Cercado", items: "1x Ceviche Mixto, 2x Pisco Sour", total: 75, status: "enviado", time: "13:15", rider: "Luis M." },
-  { id: 3, client: "Ana Torres", phone: "+51 999 345 678", address: "Calle Los Olivos 789, San Isidro", items: "3x Ají de Gallina, 1x Inca Kola", total: 84, status: "preparando", time: "13:45", rider: null },
-  { id: 4, client: "Pedro Sánchez", phone: "+51 999 901 234", address: "Av. La Marina 321, San Miguel", items: "1x Causa Limeña, 1x Tallarín Saltado", total: 43, status: "pendiente", time: "14:00", rider: null },
+  { id: 1, client: "María García", phone: "+51 999 123 456", address: "Av. Javier Prado 1234, Surco", items: [{ name: "Lomo Saltado", qty: 2, price: 32 }, { name: "Chicha Morada", qty: 1, price: 8 }], subtotal: 72, deliveryFee: 0, surcharge: 0, total: 72, status: "entregado", time: "12:30", rider: "Juan P.", notes: "" },
+  { id: 2, client: "Carlos Ruiz", phone: "+51 999 789 012", address: "Jr. de la Unión 456, Cercado", items: [{ name: "Ceviche Mixto", qty: 1, price: 35 }, { name: "Pisco Sour", qty: 2, price: 18 }], subtotal: 71, deliveryFee: 0, surcharge: 0, total: 71, status: "enviado", time: "13:15", rider: "Luis M.", notes: "Sin cebolla en el ceviche" },
+  { id: 3, client: "Ana Torres", phone: "+51 999 345 678", address: "Calle Los Olivos 789, San Isidro", items: [{ name: "Ají de Gallina", qty: 3, price: 26 }, { name: "Inca Kola", qty: 1, price: 6 }], subtotal: 84, deliveryFee: 0, surcharge: 0, total: 84, status: "preparando", time: "13:45", rider: null, notes: "Extra ají por favor" },
+  { id: 4, client: "Pedro Sánchez", phone: "+51 999 901 234", address: "Av. La Marina 321, San Miguel", items: [{ name: "Causa Limeña", qty: 1, price: 18 }, { name: "Tallarín Saltado", qty: 1, price: 25 }], subtotal: 43, deliveryFee: 5, surcharge: 0, total: 48, status: "pendiente", time: "14:00", rider: null, notes: "" },
 ];
 
 const NAV_ITEMS = [

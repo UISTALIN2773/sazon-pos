@@ -66,18 +66,53 @@ const ReceiptModal = ({ ticket, onClose }) => {
               ))}
             </div>
 
+            {/* Notes */}
+            {ticket.notes && (
+              <div style={{ background: "#FFFBEB", borderRadius: 12, padding: 12, marginBottom: 16, display: "flex", alignItems: "flex-start", gap: 8 }}>
+                <Icons.messageSquare size={14} style={{ color: "var(--warning)", marginTop: 2, flexShrink: 0 }} />
+                <div>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: "var(--warning)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Notas</p>
+                  <p style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 2 }}>{ticket.notes}</p>
+                </div>
+              </div>
+            )}
+
             {/* Totals */}
             <div className="receipt-totals">
               <div className="receipt-total-row">
-                <span style={{ color: "var(--text-secondary)" }}>Op. Gravada</span>
+                <span style={{ color: "var(--text-secondary)" }}>Subtotal</span>
                 <span className="mono" style={{ fontWeight: 500, color: "var(--text-secondary)" }}>
-                  {money(ticket.total / 1.18)}
+                  {money(ticket.subtotal || ticket.total)}
                 </span>
               </div>
+              {ticket.discountAmount > 0 && (
+                <div className="receipt-total-row" style={{ color: "var(--success)" }}>
+                  <span>Descuento ({ticket.discount})</span>
+                  <span className="mono" style={{ fontWeight: 500 }}>-{money(ticket.discountAmount)}</span>
+                </div>
+              )}
+              {ticket.deliveryFee > 0 && (
+                <div className="receipt-total-row">
+                  <span style={{ color: "var(--text-secondary)" }}>Envío</span>
+                  <span className="mono" style={{ fontWeight: 500, color: "var(--text-secondary)" }}>{money(ticket.deliveryFee)}</span>
+                </div>
+              )}
+              {ticket.deliveryFee === 0 && ticket.type === "Delivery" && (
+                <div className="receipt-total-row">
+                  <span style={{ color: "var(--text-secondary)" }}>Envío</span>
+                  <span style={{ color: "var(--success)", fontWeight: 600, fontSize: 13 }}>Gratis</span>
+                </div>
+              )}
+              {ticket.surcharge > 0 && (
+                <div className="receipt-total-row" style={{ color: "var(--warning)" }}>
+                  <span>Recargo</span>
+                  <span className="mono" style={{ fontWeight: 500 }}>+{money(ticket.surcharge)}</span>
+                </div>
+              )}
               <div className="receipt-total-row">
                 <span style={{ color: "var(--text-secondary)" }}>IGV (18%)</span>
                 <span className="mono" style={{ fontWeight: 500, color: "var(--text-secondary)" }}>
-                  {money(ticket.total - ticket.total / 1.18)}
+                  {money(ticket.igv || (ticket.total - (ticket.subtotal || ticket.total) / 1.18))}
                 </span>
               </div>
               <div className="receipt-total-final">
@@ -105,7 +140,8 @@ const ReceiptModal = ({ ticket, onClose }) => {
           <button onClick={onClose} className="btn btn-secondary" style={{ flex: 1, padding: "12px 0" }}>
             Cerrar
           </button>
-          <button className="btn btn-primary" style={{ flex: 1, padding: "12px 0" }}>
+          <button className="btn btn-primary" style={{ flex: 1, padding: "12px 0" }}
+            onClick={() => window.print()}>
             <Icons.printer size={16} /> Imprimir
           </button>
         </div>
