@@ -1,6 +1,30 @@
 # SazónPOS — Sistema de Gestión para Restaurantes
 
-Sistema completo de punto de venta para restaurantes peruanos. Demo empresarial interactiva con interfaz moderna y profesional.
+Sistema completo de punto de venta para restaurantes peruanos. Demo empresarial interactiva con interfaz modular y profesional.
+
+## Estructura del Proyecto
+
+```
+sazon-pos/
+├── index.html                 # Entry point
+├── css/
+│   └── styles.css             # Design system & global styles
+├── js/
+│   ├── data.js                # Menu, tables, categories data
+│   ├── icons.js               # SVG icon components
+│   ├── app.js                 # Main app & state management
+│   └── components/
+│       ├── QRPattern.js       # QR code generator
+│       ├── Toast.js           # Toast notifications
+│       ├── ReceiptModal.js    # Receipt modal
+│       ├── Dashboard.js       # Dashboard page
+│       ├── POS.js             # Point of Sale page
+│       ├── Tables.js          # Table management
+│       ├── Delivery.js        # Delivery tracking
+│       ├── History.js         # Sales history
+│       └── Settings.js        # System settings
+└── README.md
+```
 
 ## Demo
 
@@ -19,27 +43,19 @@ Abre `index.html` en tu navegador para ver la demo completa.
 - **Interfaz Responsiva** — Sidebar colapsable, diseño adaptable
 - **Animaciones Suaves** — Transiciones y micro-interacciones profesionales
 
+## Design System
+
+- **CSS Variables** — Tokens de color, espaciado, sombras, radios
+- **Componentes modulares** — Cada página es un componente independiente
+- **Tipografía** — Inter (UI) + JetBrains Mono (números)
+- **Accesibilidad** — `prefers-reduced-motion` support
+
 ## Stack
 
 - React 18 (via CDN)
-- Tailwind CSS (via CDN)
-- Lucide Icons
-- Google Fonts (Inter + JetBrains Mono)
-
-## Menú Peruano
-
-- **Entradas**: Causa Limeña, Papa a la Huancaína, Anticuchos, Tiradito, Solterito
-- **Fondos**: Lomo Saltado, Ají de Gallina, Arroz con Pollo, Ceviche Mixto, y más
-- **Bebidas**: Chicha Morada, Pisco Sour, Maracuyá Sour
-- **Postres**: Suspiro a la Limeña, Picarones, Tres Leches
-
-## Próximos Pasos
-
-- [ ] Migrar a FastAPI (backend)
-- [ ] Base de datos PostgreSQL
-- [ ] Autenticación de usuarios
-- [ ] Reportes exportables (PDF/Excel)
-- [ ] Integración con impresora térmica
+- Babel Standalone (JSX)
+- CSS Custom Properties (Design Tokens)
+- Google Fonts
 
 ## Licencia
 
