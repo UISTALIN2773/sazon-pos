@@ -241,27 +241,42 @@ const POSPage = ({ onSale }) => {
               </div>
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {order.map((p, idx) => (
                 <div key={p.id} className="ticket-item animate-slide-right" style={{ animationDelay: `${idx * 0.04}s` }}>
+                  {/* Image */}
                   <div className="ticket-item-emoji">
                     {p.image ? (
                       <img src={p.image} alt={p.name} loading="lazy"
                         onError={(e) => { e.target.style.display = "none"; e.target.nextSibling.style.display = "flex"; }} />
                     ) : null}
-                    <span style={{ display: p.image ? "none" : "flex", fontSize: 18 }}>{p.emoji}</span>
+                    <span style={{ display: p.image ? "none" : "flex", fontSize: 22 }}>{p.emoji}</span>
                   </div>
+
+                  {/* Name + Price per unit */}
                   <div className="ticket-item-info">
                     <div className="ticket-item-name">{p.name}</div>
-                    <div className="ticket-item-price mono">{money(p.price)}</div>
+                    <div className="ticket-item-price mono">{money(p.price)} × {p.qty}</div>
                   </div>
+
+                  {/* Qty Controls */}
                   <div className="ticket-qty-controls">
-                    <button className="ticket-qty-btn" onClick={() => decItem(p.id)}><Icons.minus size={12} /></button>
+                    <button className="ticket-qty-btn" onClick={() => decItem(p.id)}>
+                      <Icons.minus size={13} />
+                    </button>
                     <span className="ticket-qty-value mono">{p.qty}</span>
-                    <button className="ticket-qty-btn" onClick={() => addItem(p)}><Icons.plus size={12} /></button>
+                    <button className="ticket-qty-btn" onClick={() => addItem(p)}>
+                      <Icons.plus size={13} />
+                    </button>
                   </div>
+
+                  {/* Line Total */}
                   <div className="ticket-item-total mono">{money(p.price * p.qty)}</div>
-                  <button className="ticket-item-remove" onClick={() => removeItem(p.id)}><Icons.x size={14} /></button>
+
+                  {/* Remove */}
+                  <button className="ticket-item-remove" onClick={() => removeItem(p.id)}>
+                    <Icons.x size={14} />
+                  </button>
                 </div>
               ))}
 
