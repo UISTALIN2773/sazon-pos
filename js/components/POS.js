@@ -19,10 +19,9 @@ const POSPage = ({ onSale }) => {
   const [showNotes, setShowNotes] = React.useState(false);
   const searchRef = React.useRef(null);
 
-  // Keyboard shortcuts
   React.useEffect(() => {
-    const clearHandler = () => { clearOrder(); };
-    const searchHandler = () => { searchRef.current?.focus(); };
+    const clearHandler = () => clearOrder();
+    const searchHandler = () => searchRef.current?.focus();
     window.addEventListener("pos-clear-order", clearHandler);
     window.addEventListener("pos-focus-search", searchHandler);
     return () => {
@@ -72,10 +71,7 @@ const POSPage = ({ onSale }) => {
     }
   }, [couponInput]);
 
-  const removeDiscount = React.useCallback(() => {
-    setDiscount(null);
-    setCouponInput("");
-  }, []);
+  const removeDiscount = React.useCallback(() => { setDiscount(null); setCouponInput(""); }, []);
 
   const subtotal = React.useMemo(() => order.reduce((s, p) => s + p.price * p.qty, 0), [order]);
   const discountAmount = React.useMemo(() => {
@@ -110,15 +106,12 @@ const POSPage = ({ onSale }) => {
   return (
     <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
 
-      {/* Menu Area */}
+      {/* ═══ MENU AREA ═══ */}
       <div style={{ flex: 1, overflowY: "auto", padding: 32 }}>
-
-        {/* Top Controls */}
         <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
           <div className="segmented">
             {["Salón", "Para Llevar", "Delivery"].map(type => (
-              <button key={type}
-                onClick={() => { setOrderType(type); if (type !== "Salón") setSelectedTable(null); }}
+              <button key={type} onClick={() => { setOrderType(type); if (type !== "Salón") setSelectedTable(null); }}
                 className={`segmented-item ${orderType === type ? "active" : ""}`}>
                 {type === "Salón" ? <Icons.store size={16} /> : type === "Para Llevar" ? <Icons.package size={16} /> : <Icons.truck size={16} />}
                 {type}
@@ -147,7 +140,6 @@ const POSPage = ({ onSale }) => {
           </div>
         </div>
 
-        {/* Categories */}
         <div style={{ display: "flex", gap: 8, marginBottom: 32 }}>
           {CATEGORIES.map(c => (
             <button key={c.id} onClick={() => setCategory(c.id)}
@@ -158,7 +150,6 @@ const POSPage = ({ onSale }) => {
           ))}
         </div>
 
-        {/* Products Grid */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 16, paddingBottom: 32 }}>
           {filtered.map((item, index) => (
             <button key={item.id} onClick={() => addItem(item)}
@@ -199,52 +190,70 @@ const POSPage = ({ onSale }) => {
         </div>
       </div>
 
-      {/* ORDER TICKET */}
+      {/* ═══ ORDER TICKET ═══ */}
       <div className="ticket">
+
         {/* Header */}
         <div className="ticket-header">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
-              <h2 style={{ fontWeight: 700, fontSize: 18, color: "var(--text-primary)" }}>Orden</h2>
-              <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2, fontWeight: 500 }}>
-                {orderType}{selectedTable ? ` · Mesa ${selectedTable}` : ""} · {totalItems} items
-                {isDelivery && <span style={{ marginLeft: 6, color: "var(--info)", fontWeight: 600 }}>+ Envío</span>}
-              </p>
+              <h2 style={{ fontWeight: 700, fontSize: 17, color: "var(--text-primary)" }}>Orden</h2>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", background: "var(--bg-slate-100)", padding: "3px 8px", borderRadius: 6 }}>
+                  {orderType}
+                </span>
+                {selectedTable && (
+                  <span style={{ fontSize: 11, fontWeight: 600, color: "var(--brand)", background: "var(--brand-light)", padding: "3px 8px", borderRadius: 6 }}>
+                    Mesa {selectedTable}
+                  </span>
+                )}
+                {isDelivery && (
+                  <span style={{ fontSize: 11, fontWeight: 600, color: "var(--info)", background: "var(--info-bg)", padding: "3px 8px", borderRadius: 6 }}>
+                    + Envío
+                  </span>
+                )}
+                <span className="mono" style={{ fontSize: 11, color: "var(--text-faint)" }}>
+                  {totalItems} {totalItems === 1 ? "item" : "items"}
+                </span>
+              </div>
             </div>
             {order.length > 0 && (
-              <button onClick={clearOrder} style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer", padding: "6px 12px", borderRadius: 8, transition: "all 0.15s" }}
+              <button onClick={clearOrder}
+                style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", background: "var(--bg-slate-100)", border: "none", cursor: "pointer", padding: "6px 12px", borderRadius: 8, transition: "all 0.15s", display: "flex", alignItems: "center", gap: 4 }}
                 onMouseEnter={e => { e.target.style.color = "var(--error)"; e.target.style.background = "var(--error-bg)"; }}
-                onMouseLeave={e => { e.target.style.color = "var(--text-muted)"; e.target.style.background = "none"; }}>
-                Limpiar
+                onMouseLeave={e => { e.target.style.color = "var(--text-muted)"; e.target.style.background = "var(--bg-slate-100)"; }}>
+                <Icons.trash size={12} /> Limpiar
               </button>
             )}
           </div>
         </div>
 
-        {/* Items */}
+        {/* Items List */}
         <div className="ticket-items">
           {order.length === 0 ? (
             <div className="ticket-empty">
-              <div className="ticket-empty-icon"><Icons.cart size={32} /></div>
+              <div style={{ width: 88, height: 88, borderRadius: 24, background: "linear-gradient(135deg, var(--bg-slate-50), var(--bg-slate-100))", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Icons.cart size={36} style={{ color: "var(--text-faint)" }} />
+              </div>
               <div style={{ textAlign: "center" }}>
-                <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text-muted)" }}>Sin productos</p>
-                <p style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 4 }}>Selecciona del menú</p>
+                <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4 }}>Sin productos</p>
+                <p style={{ fontSize: 12, color: "var(--text-muted)", lineHeight: 1.5 }}>Selecciona platos del menú<br />para agregar a la orden</p>
               </div>
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
               {order.map((p, idx) => (
                 <div key={p.id} className="ticket-item animate-slide-right" style={{ animationDelay: `${idx * 0.04}s` }}>
                   <div className="ticket-item-emoji">
                     {p.image ? (
-                      <img src={p.image} alt={p.name} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }}
+                      <img src={p.image} alt={p.name} loading="lazy"
                         onError={(e) => { e.target.style.display = "none"; e.target.nextSibling.style.display = "flex"; }} />
                     ) : null}
-                    <span style={{ display: p.image ? "none" : "flex", fontSize: 20 }}>{p.emoji}</span>
+                    <span style={{ display: p.image ? "none" : "flex", fontSize: 18 }}>{p.emoji}</span>
                   </div>
                   <div className="ticket-item-info">
                     <div className="ticket-item-name">{p.name}</div>
-                    <div className="ticket-item-price mono">{money(p.price)} c/u</div>
+                    <div className="ticket-item-price mono">{money(p.price)}</div>
                   </div>
                   <div className="ticket-qty-controls">
                     <button className="ticket-qty-btn" onClick={() => decItem(p.id)}><Icons.minus size={12} /></button>
@@ -256,110 +265,166 @@ const POSPage = ({ onSale }) => {
                 </div>
               ))}
 
-              {/* Order Notes */}
-              <div className="order-notes-section">
-                <button className="order-notes-toggle" onClick={() => setShowNotes(!showNotes)}>
-                  <Icons.messageSquare size={14} />
-                  {showNotes ? "Ocultar notas" : "Agregar notas"}
-                  <Icons.chevronDown size={12} style={{ transform: showNotes ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+              {/* Notes Toggle */}
+              <div style={{ paddingTop: 12, marginTop: 8, borderTop: "1px dashed var(--border-light)" }}>
+                <button onClick={() => setShowNotes(!showNotes)}
+                  style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, color: orderNotes ? "var(--brand)" : "var(--text-muted)", background: orderNotes ? "var(--brand-light)" : "none", border: "none", cursor: "pointer", padding: "6px 10px", borderRadius: 8, width: "100%", transition: "all 0.15s" }}>
+                  <Icons.messageSquare size={13} />
+                  {orderNotes ? "Nota agregada" : "Agregar nota"}
+                  <Icons.chevronDown size={12} style={{ marginLeft: "auto", transform: showNotes ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
                 </button>
                 {showNotes && (
-                  <textarea className="order-notes-input" placeholder="Ej: Sin cebolla, poco picante, extra salsa..." value={orderNotes} onChange={e => setOrderNotes(e.target.value)} />
+                  <textarea
+                    placeholder="Ej: Sin cebolla, poco picante..."
+                    value={orderNotes}
+                    onChange={e => setOrderNotes(e.target.value)}
+                    style={{ width: "100%", marginTop: 8, padding: "10px 12px", border: "1px solid var(--border-light)", borderRadius: 10, fontSize: 12, color: "var(--text-primary)", resize: "vertical", minHeight: 56, fontFamily: "inherit", transition: "border-color 0.15s" }}
+                    onFocus={e => e.target.style.borderColor = "var(--brand)"}
+                    onBlur={e => e.target.style.borderColor = "var(--border-light)"}
+                  />
                 )}
               </div>
             </div>
           )}
         </div>
 
-        {/* Checkout */}
+        {/* ═══ CHECKOUT ═══ */}
         <div className="checkout">
-          {/* Discount */}
-          <div style={{ marginBottom: 12 }}>
+
+          {/* Coupon */}
+          <div style={{ marginBottom: 16 }}>
             {discount ? (
-              <div className="discount-badge">
-                <Icons.tag size={14} />
-                {discount.label}
-                <button className="discount-remove" onClick={removeDiscount}><Icons.x size={12} /></button>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: "var(--success-bg)", borderRadius: 10, marginBottom: 0 }}>
+                <Icons.tag size={14} style={{ color: "var(--success)" }} />
+                <span style={{ fontSize: 12, fontWeight: 600, color: "var(--success)", flex: 1 }}>{discount.label}</span>
+                <button onClick={removeDiscount} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--success)", padding: 2, display: "flex", opacity: 0.7 }}>
+                  <Icons.x size={14} />
+                </button>
               </div>
             ) : (
-              <div className="discount-row">
-                <input className="discount-input" placeholder="Cupón" value={couponInput} onChange={e => setCouponInput(e.target.value.toUpperCase())}
-                  onKeyDown={e => e.key === "Enter" && applyCoupon()} />
-                <button className="discount-apply-btn" onClick={applyCoupon}>Aplicar</button>
+              <div style={{ display: "flex", gap: 6 }}>
+                <input
+                  placeholder="Cupón"
+                  value={couponInput}
+                  onChange={e => setCouponInput(e.target.value.toUpperCase())}
+                  onKeyDown={e => e.key === "Enter" && applyCoupon()}
+                  style={{ flex: 1, padding: "9px 12px", border: "1px solid var(--border-light)", borderRadius: 10, fontSize: 12, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: "0.05em", transition: "all 0.15s" }}
+                  onFocus={e => e.target.style.borderColor = "var(--brand)"}
+                  onBlur={e => e.target.style.borderColor = "var(--border-light)"}
+                />
+                <button onClick={applyCoupon}
+                  style={{ padding: "9px 14px", background: "var(--text-primary)", color: "white", border: "none", borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.15s", whiteSpace: "nowrap" }}>
+                  Aplicar
+                </button>
               </div>
             )}
-            {couponError && <p style={{ fontSize: 11, color: "var(--error)", marginTop: 4, fontWeight: 500 }}>{couponError}</p>}
+            {couponError && <p style={{ fontSize: 11, color: "var(--error)", marginTop: 6, fontWeight: 500 }}>{couponError}</p>}
           </div>
 
-          <div className="checkout-row"><span>Subtotal</span><span className="mono">{money(subtotal)}</span></div>
-          {discountAmount > 0 && (
-            <div className="checkout-row" style={{ color: "var(--success)" }}>
-              <span>Descuento ({discount.code})</span><span className="mono">-{money(discountAmount)}</span>
+          {/* Totals */}
+          <div style={{ background: "var(--bg-slate-50)", borderRadius: 12, padding: 14, marginBottom: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 8 }}>
+              <span style={{ color: "var(--text-muted)" }}>Subtotal</span>
+              <span className="mono" style={{ fontWeight: 600, color: "var(--text-secondary)" }}>{money(subtotal)}</span>
             </div>
-          )}
-          {isDelivery && (
-            <>
-              <div className="checkout-row">
-                <span>Envío</span>
-                <span className={`mono ${deliveryFee === 0 ? "free" : ""}`}>{deliveryFee === 0 ? "Gratis" : money(deliveryFee)}</span>
+            {discountAmount > 0 && (
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 8, color: "var(--success)" }}>
+                <span>Descuento</span>
+                <span className="mono" style={{ fontWeight: 600 }}>-{money(discountAmount)}</span>
               </div>
-              {surcharge > 0 && (
-                <div className="checkout-row" style={{ color: "var(--warning)" }}>
-                  <span>Recargo (mínimo {money(DELIVERY_CONFIG.minimumOrder)})</span><span className="mono">+{money(surcharge)}</span>
-                </div>
-              )}
-            </>
-          )}
-          <div className="checkout-row"><span>IGV (18%)</span><span className="mono">{money(igv)}</span></div>
-          <div className="checkout-total">
-            <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>Total</span>
-            <span className="checkout-total-value mono">{money(total)}</span>
+            )}
+            {isDelivery && (
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 8 }}>
+                <span style={{ color: "var(--text-muted)" }}>Envío</span>
+                <span className={`mono ${deliveryFee === 0 ? "" : ""}`} style={{ fontWeight: 600, color: deliveryFee === 0 ? "var(--success)" : "var(--text-secondary)" }}>
+                  {deliveryFee === 0 ? "Gratis" : money(deliveryFee)}
+                </span>
+              </div>
+            )}
+            {surcharge > 0 && (
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 8, color: "var(--warning)" }}>
+                <span>Recargo</span>
+                <span className="mono" style={{ fontWeight: 600 }}>+{money(surcharge)}</span>
+              </div>
+            )}
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, paddingTop: 8, borderTop: "1px solid var(--border-light)" }}>
+              <span style={{ color: "var(--text-muted)" }}>IGV (18%)</span>
+              <span className="mono" style={{ fontWeight: 600, color: "var(--text-secondary)" }}>{money(igv)}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 12, marginTop: 8, borderTop: "2px solid var(--border-light)" }}>
+              <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Total</span>
+              <span className="mono" style={{ fontSize: 26, fontWeight: 800, color: "var(--brand)", letterSpacing: "-0.02em" }}>{money(total)}</span>
+            </div>
           </div>
 
-          <p className="payment-label" style={{ marginTop: 20 }}>Método de Pago</p>
-          <div className="payment-methods">
-            {[{ id: "Efectivo", icon: Icons.banknote }, { id: "Plin", icon: Icons.qr }, { id: "Yape", icon: Icons.zap }].map(m => (
-              <button key={m.id} onClick={() => { setMethod(m.id); setCashInput(""); setQrConfirmed(false); }}
-                className={`payment-method-btn ${method === m.id ? "active" : ""}`}>
-                <m.icon size={14} /> {m.id}
-              </button>
-            ))}
+          {/* Payment Methods */}
+          <div style={{ marginBottom: 16 }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>Método de Pago</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+              {[{ id: "Efectivo", icon: Icons.banknote, color: "#059669" }, { id: "Plin", icon: Icons.qr, color: "#2563EB" }, { id: "Yape", icon: Icons.zap, color: "#7C3AED" }].map(m => (
+                <button key={m.id} onClick={() => { setMethod(m.id); setCashInput(""); setQrConfirmed(false); }}
+                  style={{
+                    padding: "10px 0", borderRadius: 12, fontSize: 12, fontWeight: 600,
+                    display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                    border: method === m.id ? `2px solid ${m.color}` : "2px solid var(--border-light)",
+                    background: method === m.id ? `${m.color}08` : "var(--bg-white)",
+                    color: method === m.id ? m.color : "var(--text-secondary)",
+                    cursor: "pointer", transition: "all 0.15s",
+                    boxShadow: method === m.id ? `0 4px 12px ${m.color}15` : "none",
+                  }}>
+                  <m.icon size={18} />
+                  {m.id}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div style={{ minHeight: 80 }}>
+          {/* Payment Input */}
+          <div style={{ minHeight: 80, marginBottom: 16 }}>
             {method === "Efectivo" && (
-              <div className="animate-fade-up" style={{ background: "var(--bg-white)", padding: 14, borderRadius: 12, border: "1px solid var(--border-light)" }}>
-                <div className="cash-input-wrapper">
-                  <span className="cash-input-prefix">S/</span>
-                  <input type="number" value={cashInput} onChange={e => setCashInput(e.target.value)} placeholder="0.00" className="cash-input" />
+              <div style={{ background: "var(--bg-white)", padding: 14, borderRadius: 14, border: "1px solid var(--border-light)" }}>
+                <div style={{ position: "relative" }}>
+                  <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 600, color: "var(--text-muted)" }}>S/</span>
+                  <input type="number" value={cashInput} onChange={e => setCashInput(e.target.value)} placeholder="0.00"
+                    style={{ width: "100%", background: "var(--bg-slate-50)", border: "1px solid transparent", borderRadius: 10, padding: "12px 12px 12px 40px", fontFamily: "'JetBrains Mono', monospace", fontSize: 18, fontWeight: 700, color: "var(--text-primary)", transition: "all 0.15s" }}
+                    onFocus={e => { e.target.style.borderColor = "var(--brand)"; e.target.style.boxShadow = "0 0 0 3px rgba(255,79,0,0.1)"; }}
+                    onBlur={e => { e.target.style.borderColor = "transparent"; e.target.style.boxShadow = "none"; }}
+                  />
                 </div>
                 {cashInput !== "" && (
-                  <div className={`cash-change ${vuelto >= 0 ? "positive" : "negative"}`}>
+                  <div style={{ marginTop: 10, padding: "10px 12px", borderRadius: 10, fontSize: 13, fontWeight: 600, display: "flex", justifyContent: "space-between", alignItems: "center", background: vuelto >= 0 ? "var(--success-bg)" : "var(--error-bg)", color: vuelto >= 0 ? "var(--success)" : "var(--error)" }}>
                     <span>{vuelto >= 0 ? "Vuelto" : "Faltante"}</span>
-                    <span className="cash-change-value mono">{money(Math.abs(vuelto))}</span>
+                    <span className="mono" style={{ fontSize: 17, fontWeight: 800 }}>{money(Math.abs(vuelto))}</span>
                   </div>
                 )}
               </div>
             )}
             {(method === "Plin" || method === "Yape") && (
-              <div className="animate-fade-up qr-panel" style={{ position: "relative" }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", background: "var(--bg-white)", padding: 16, borderRadius: 14, border: "1px solid var(--border-light)" }}>
                 <QRPattern size={120} />
                 {!qrConfirmed ? (
-                  <button onClick={() => setQrConfirmed(true)} className="qr-simulate-btn">Simular pago ({method})</button>
+                  <button onClick={() => setQrConfirmed(true)}
+                    style={{ marginTop: 12, padding: "8px 20px", background: "var(--bg-slate-100)", color: "var(--text-secondary)", fontSize: 12, fontWeight: 600, borderRadius: 10, cursor: "pointer", border: "none", transition: "all 0.15s" }}>
+                    Simular pago ({method})
+                  </button>
                 ) : (
-                  <div className="qr-confirmed animate-bounce-in"><Icons.check size={16} /> Pago confirmado</div>
+                  <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 6, color: "var(--success)", background: "var(--success-bg)", padding: "8px 20px", borderRadius: 10, fontSize: 13, fontWeight: 600 }}>
+                    <Icons.check size={16} /> Pago confirmado
+                  </div>
                 )}
               </div>
             )}
           </div>
 
-          <button onClick={cobrar} disabled={!readyToCharge} className="btn btn-primary" style={{ width: "100%", marginTop: 20, padding: "16px 0", fontSize: 14 }}>
+          {/* Charge Button */}
+          <button onClick={cobrar} disabled={!readyToCharge}
+            className="btn btn-primary"
+            style={{ width: "100%", padding: "15px 0", fontSize: 14, fontWeight: 700, borderRadius: 14 }}>
             {readyToCharge ? <><Icons.check size={18} /> Cobrar {money(total)}</> : "Agrega productos para cobrar"}
           </button>
         </div>
       </div>
 
-      {/* Receipt Modal */}
       {showReceipt && <ReceiptModal ticket={showReceipt} onClose={() => setShowReceipt(null)} />}
     </div>
   );
