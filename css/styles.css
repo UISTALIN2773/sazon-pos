@@ -534,6 +534,14 @@ input, select, button { outline: none; font-family: inherit; }
   font-size: 32px;
   margin-bottom: 16px;
   transition: transform 0.3s var(--ease-out);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.product-card-emoji img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
 }
 .product-card:hover .product-card-emoji { transform: scale(1.1); }
 .product-card-name {
@@ -668,6 +676,13 @@ input, select, button { outline: none; font-family: inherit; }
   justify-content: center;
   font-size: 20px;
   flex-shrink: 0;
+  overflow: hidden;
+}
+.ticket-item-emoji img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
 }
 .ticket-item-info { flex: 1; min-width: 0; }
 .ticket-item-name {

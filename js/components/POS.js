@@ -169,7 +169,13 @@ const POSPage = ({ onSale }) => {
               ) : (
                 <div className="product-card-add"><Icons.plus size={16} /></div>
               )}
-              <div className="product-card-emoji">{item.emoji}</div>
+              <div className="product-card-emoji">
+                {item.image ? (
+                  <img src={item.image} alt={item.name} loading="lazy"
+                    onError={(e) => { e.target.style.display = "none"; e.target.nextSibling.style.display = "flex"; }} />
+                ) : null}
+                <span style={{ display: item.image ? "none" : "flex" }}>{item.emoji}</span>
+              </div>
               <div className="product-card-name">{item.name}</div>
               <div className="product-card-desc">{item.desc}</div>
               <div className="product-card-footer">
@@ -229,7 +235,13 @@ const POSPage = ({ onSale }) => {
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               {order.map((p, idx) => (
                 <div key={p.id} className="ticket-item animate-slide-right" style={{ animationDelay: `${idx * 0.04}s` }}>
-                  <div className="ticket-item-emoji">{p.emoji}</div>
+                  <div className="ticket-item-emoji">
+                    {p.image ? (
+                      <img src={p.image} alt={p.name} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }}
+                        onError={(e) => { e.target.style.display = "none"; e.target.nextSibling.style.display = "flex"; }} />
+                    ) : null}
+                    <span style={{ display: p.image ? "none" : "flex", fontSize: 20 }}>{p.emoji}</span>
+                  </div>
                   <div className="ticket-item-info">
                     <div className="ticket-item-name">{p.name}</div>
                     <div className="ticket-item-price mono">{money(p.price)} c/u</div>
